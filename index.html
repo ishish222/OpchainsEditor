@@ -1,9 +1,21 @@
+<!DOCTYPE html>
 <html>
 <head>
-<title>Test</title>
+	<title>D3.js Example</title>
+	<script src="https://d3js.org/d3.v6.min.js"></script>
 </head>
 <body>
-Test
+	<h1>D3.js Example</h1>
+	<script>
+		// Select the body element
+		d3.select("body")
+			// Append a circle element
+			.append("circle")
+			// Set the circle's attributes
+			.attr("cx", 50)
+			.attr("cy", 50)
+			.attr("r", 25)
+			.attr("fill", "blue");
+	</script>
 </body>
 </html>
-
