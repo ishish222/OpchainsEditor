@@ -1,21 +1,103 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<title>D3.js Example</title>
-	<script src="https://d3js.org/d3.v6.min.js"></script>
-</head>
-<body>
-	<h1>D3.js Example</h1>
-	<script>
-		// Select the body element
-		d3.select("body")
-			// Append a circle element
-			.append("circle")
-			// Set the circle's attributes
-			.attr("cx", 50)
-			.attr("cy", 50)
-			.attr("r", 25)
-			.attr("fill", "blue");
-	</script>
-</body>
+  <head>
+    <meta charset="UTF-8">
+    <title>D3.js Directed Graph Example</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      .link {
+        stroke: #999;
+        stroke-opacity: 0.6;
+      }
+
+      .node circle {
+        fill: #ccc;
+        stroke: #fff;
+        stroke-width: 1.5px;
+        cursor: pointer;
+      }
+
+      .node.highlight circle {
+        fill: #f00;
+      }
+
+      .node text {
+        font-size: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      const width = 400;
+      const height = 200;
+
+      const nodes = [
+        { id: "A" },
+        { id: "B" },
+        { id: "C" },
+        { id: "D" },
+      ];
+
+      const links = [
+        { source: "A", target: "B" },
+        { source: "B", target: "C" },
+        { source: "C", target: "D" },
+        { source: "D", target: "A" },
+      ];
+
+      const simulation = d3.forceSimulation(nodes)
+                           .force("link", d3.forceLink(links).id(d => d.id))
+                           .force("charge", d3.forceManyBody().strength(-50))
+                           .force("center", d3.forceCenter(width / 2, height / 2));
+
+      const svg = d3.select("body")
+                  .append("svg")
+                  .attr("width", width)
+                  .attr("height", height);
+
+      const link = svg.selectAll(".link")
+                     .data(links)
+                     .enter()
+                     .append("line")
+                     .attr("class", "link");
+
+      const node = svg.selectAll(".node")
+                     .data(nodes)
+                     .enter()
+                     .append("g")
+                     .attr("class", "node")
+                     .on("click", clicked);
+
+      node.append("circle")
+          .attr("r", 25);
+
+      node.append("text")
+          .text(d => d.id);
+
+      function clicked(event, d) {
+        // Toggle highlight class for clicked node
+        const node = d3.select(this);
+        node.classed("highlight", !node.classed("highlight"));
+
+        // Toggle opacity of links
+        link.style("stroke-opacity", link => {
+          if (link.source === d || link.target === d) {
+            return node.classed("highlight") ? 1 : 0.6;
+          } else {
+            return 0.6;
+          }
+        });
+      }
+
+      simulation.on("tick", () => {
+        link.attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+
+        node.attr("transform", d => `translate(${d.x},${d.y})`);
+      });
+    </script>
+  </body>
 </html>
+
