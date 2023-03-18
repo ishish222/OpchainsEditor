@@ -1,69 +1,68 @@
-i<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>D3.js Graph Example</title>
+  <meta charset="utf-8">
+  <title>Directed Graph</title>
   <script src="https://d3js.org/d3.v5.min.js"></script>
-  <style>
-    circle {
-      fill: #ccc;
-      stroke: #333;
-      stroke-width: 2px;
-    }
-    .highlight {
-      fill: yellow;
-      stroke: orange;
-    }
-  </style>
 </head>
 <body>
   <svg width="500" height="500"></svg>
+
   <script>
     const svg = d3.select("svg");
     const width = +svg.attr("width");
     const height = +svg.attr("height");
 
     const nodes = [
-      {id: 0, x: 100, y: 100},
-      {id: 1, x: 200, y: 100},
-      {id: 2, x: 100, y: 200},
-      {id: 3, x: 200, y: 200}
+      { id: "A" },
+      { id: "B" },
+      { id: "C" },
+      { id: "D" }
     ];
 
     const links = [
-      {source: nodes[0], target: nodes[1]},
-      {source: nodes[0], target: nodes[2]},
-      {source: nodes[1], target: nodes[3]},
-      {source: nodes[2], target: nodes[3]}
+      { source: "A", target: "B" },
+      { source: "B", target: "C" },
+      { source: "C", target: "D" },
+      { source: "D", target: "A" }
     ];
 
+    const marker = svg.append("defs")
+      .append("marker")
+      .attr("id", "arrowhead")
+      .attr("markerWidth", 10)
+      .attr("markerHeight", 7)
+      .attr("refX", 0)
+      .attr("refY", 3.5)
+      .attr("orient", "auto");
+
+    marker.append("polygon")
+      .attr("points", "0 0, 10 3.5, 0 7")
+      .attr("fill", "gray");
+
     const simulation = d3.forceSimulation(nodes)
-      .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+      .force("link", d3.forceLink(links).id(d => d.id).distance(100).strength(1))
       .force("charge", d3.forceManyBody().strength(-100))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
-    const link = svg.selectAll("line")
+    const link = svg.append("g")
+      .selectAll("line")
       .data(links)
       .enter().append("line")
-        .attr("stroke", "#333")
-        .attr("stroke-width", 2);
+      .attr("stroke", "black")
+      .attr("stroke-width", "2")
+      .attr("marker-end", "url(#arrowhead)");
 
-    const node = svg.selectAll("circle")
+    const node = svg.append("g")
+      .selectAll("circle")
       .data(nodes)
       .enter().append("circle")
-        .attr("r", 20)
-        .attr("cx", d => d.x)
-        .attr("cy", d => d.y)
-        .call(d3.drag()
-          .on("start", dragstarted)
-          .on("drag", dragged)
-          .on("end", dragended));
-
-    node.on("mouseover", function(d) {
-      d3.select(this).classed("highlight", true);
-    }).on("mouseout", function(d) {
-      d3.select(this).classed("highlight", false);
-    });
+      .attr("r", 20)
+      .attr("fill", "lightgray")
+      .call(d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended));
 
     function ticked() {
       link
@@ -98,4 +97,3 @@ i<!DOCTYPE html>
   </script>
 </body>
 </html>
-
