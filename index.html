@@ -1,103 +1,101 @@
-<!DOCTYPE html>
+i<!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>D3.js Directed Graph Example</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <style>
-      .link {
-        stroke: #999;
-        stroke-opacity: 0.6;
-      }
+<head>
+  <meta charset="UTF-8">
+  <title>D3.js Graph Example</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <style>
+    circle {
+      fill: #ccc;
+      stroke: #333;
+      stroke-width: 2px;
+    }
+    .highlight {
+      fill: yellow;
+      stroke: orange;
+    }
+  </style>
+</head>
+<body>
+  <svg width="500" height="500"></svg>
+  <script>
+    const svg = d3.select("svg");
+    const width = +svg.attr("width");
+    const height = +svg.attr("height");
 
-      .node circle {
-        fill: #ccc;
-        stroke: #fff;
-        stroke-width: 1.5px;
-        cursor: pointer;
-      }
+    const nodes = [
+      {id: 0, x: 100, y: 100},
+      {id: 1, x: 200, y: 100},
+      {id: 2, x: 100, y: 200},
+      {id: 3, x: 200, y: 200}
+    ];
 
-      .node.highlight circle {
-        fill: #f00;
-      }
+    const links = [
+      {source: nodes[0], target: nodes[1]},
+      {source: nodes[0], target: nodes[2]},
+      {source: nodes[1], target: nodes[3]},
+      {source: nodes[2], target: nodes[3]}
+    ];
 
-      .node text {
-        font-size: 10px;
-      }
-    </style>
-  </head>
-  <body>
-    <script>
-      const width = 400;
-      const height = 200;
+    const simulation = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+      .force("charge", d3.forceManyBody().strength(-100))
+      .force("center", d3.forceCenter(width / 2, height / 2));
 
-      const nodes = [
-        { id: "A" },
-        { id: "B" },
-        { id: "C" },
-        { id: "D" },
-      ];
+    const link = svg.selectAll("line")
+      .data(links)
+      .enter().append("line")
+        .attr("stroke", "#333")
+        .attr("stroke-width", 2);
 
-      const links = [
-        { source: "A", target: "B" },
-        { source: "B", target: "C" },
-        { source: "C", target: "D" },
-        { source: "D", target: "A" },
-      ];
+    const node = svg.selectAll("circle")
+      .data(nodes)
+      .enter().append("circle")
+        .attr("r", 20)
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y)
+        .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
 
-      const simulation = d3.forceSimulation(nodes)
-                           .force("link", d3.forceLink(links).id(d => d.id))
-                           .force("charge", d3.forceManyBody().strength(-50))
-                           .force("center", d3.forceCenter(width / 2, height / 2));
+    node.on("mouseover", function(d) {
+      d3.select(this).classed("highlight", true);
+    }).on("mouseout", function(d) {
+      d3.select(this).classed("highlight", false);
+    });
 
-      const svg = d3.select("body")
-                  .append("svg")
-                  .attr("width", width)
-                  .attr("height", height);
+    function ticked() {
+      link
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
 
-      const link = svg.selectAll(".link")
-                     .data(links)
-                     .enter()
-                     .append("line")
-                     .attr("class", "link");
+      node
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y);
+    }
 
-      const node = svg.selectAll(".node")
-                     .data(nodes)
-                     .enter()
-                     .append("g")
-                     .attr("class", "node")
-                     .on("click", clicked);
+    function dragstarted(d) {
+      if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
 
-      node.append("circle")
-          .attr("r", 25);
+    function dragged(d) {
+      d.fx = d3.event.x;
+      d.fy = d3.event.y;
+    }
 
-      node.append("text")
-          .text(d => d.id);
+    function dragended(d) {
+      if (!d3.event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
 
-      function clicked(event, d) {
-        // Toggle highlight class for clicked node
-        const node = d3.select(this);
-        node.classed("highlight", !node.classed("highlight"));
-
-        // Toggle opacity of links
-        link.style("stroke-opacity", link => {
-          if (link.source === d || link.target === d) {
-            return node.classed("highlight") ? 1 : 0.6;
-          } else {
-            return 0.6;
-          }
-        });
-      }
-
-      simulation.on("tick", () => {
-        link.attr("x1", d => d.source.x)
-            .attr("y1", d => d.source.y)
-            .attr("x2", d => d.target.x)
-            .attr("y2", d => d.target.y);
-
-        node.attr("transform", d => `translate(${d.x},${d.y})`);
-      });
-    </script>
-  </body>
+    simulation.on("tick", ticked);
+  </script>
+</body>
 </html>
 
