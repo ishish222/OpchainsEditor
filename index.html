@@ -6,94 +6,83 @@
   <script src="https://d3js.org/d3.v5.min.js"></script>
 </head>
 <body>
-  <svg width="500" height="500"></svg>
+  <svg width="500" height="500" viewBox="-10 -10 110 110">
+    <defs>
+      <marker id="arrowhead" markerWidth="10" markerHeight="7"
+              refX="0" refY="3.5" orient="auto">
+        <polygon fill="#999" points="0 0, 10 3.5, 0 7" />
+      </marker>
+    </defs>
 
-  <script>
-    const svg = d3.select("svg");
-    const width = +svg.attr("width");
-    const height = +svg.attr("height");
+    <script>
+      var nodes = [
+        { id: "A", x: 10, y: 30 },
+        { id: "B", x: 50, y: 10 },
+        { id: "C", x: 90, y: 30 },
+        { id: "D", x: 50, y: 70 }
+      ];
 
-    const nodes = [
-      { id: "A" },
-      { id: "B" },
-      { id: "C" },
-      { id: "D" }
-    ];
+      var links = [
+        { source: "A", target: "B" },
+        { source: "B", target: "C" },
+        { source: "C", target: "D" },
+        { source: "D", target: "A" }
+      ];
 
-    const links = [
-      { source: "A", target: "B" },
-      { source: "B", target: "C" },
-      { source: "C", target: "D" },
-      { source: "D", target: "A" }
-    ];
+      var simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links))
+        .force("charge", d3.forceManyBody().strength(-100))
+        .force("center", d3.forceCenter(50, 50));
 
-    const marker = svg.append("defs")
-      .append("marker")
-      .attr("id", "arrowhead")
-      .attr("markerWidth", 10)
-      .attr("markerHeight", 7)
-      .attr("refX", 0)
-      .attr("refY", 3.5)
-      .attr("orient", "auto");
+      var line = d3.line()
+        .x(function(d) { return d.x; })
+        .y(function(d) { return d.y; });
 
-    marker.append("polygon")
-      .attr("points", "0 0, 10 3.5, 0 7")
-      .attr("fill", "gray");
+      var link = svg.selectAll(".link")
+        .data(links)
+        .enter().append("line")
+        .attr("class", "link")
+        .attr("marker-end", "url(#arrowhead)");
 
-    const simulation = d3.forceSimulation(nodes)
-      .force("link", d3.forceLink(links).id(d => d.id).distance(100).strength(1))
-      .force("charge", d3.forceManyBody().strength(-100))
-      .force("center", d3.forceCenter(width / 2, height / 2));
+      var node = svg.selectAll(".node")
+        .data(nodes)
+        .enter().append("circle")
+        .attr("class", "node")
+        .attr("r", 10)
+        .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
 
-    const link = svg.append("g")
-      .selectAll("line")
-      .data(links)
-      .enter().append("line")
-      .attr("stroke", "black")
-      .attr("stroke-width", "2")
-      .attr("marker-end", "url(#arrowhead)");
+      function ticked() {
+        link.attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { return d.target.x; })
+            .attr("y2", function(d) { return d.target.y; });
 
-    const node = svg.append("g")
-      .selectAll("circle")
-      .data(nodes)
-      .enter().append("circle")
-      .attr("r", 20)
-      .attr("fill", "lightgray")
-      .call(d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended));
+        node.attr("cx", function(d) { return d.x; })
+            .attr("cy", function(d) { return d.y; });
+      }
 
-    function ticked() {
-      link
-        .attr("x1", d => d.source.x)
-        .attr("y1", d => d.source.y)
-        .attr("x2", d => d.target.x)
-        .attr("y2", d => d.target.y);
+      function dragstarted(d) {
+        if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      }
 
-      node
-        .attr("cx", d => d.x)
-        .attr("cy", d => d.y);
-    }
+      function dragged(d) {
+        d.fx = d3.event.x;
+        d.fy = d3.event.y;
+      }
 
-    function dragstarted(d) {
-      if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
-    }
+      function dragended(d) {
+        if (!d3.event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      }
 
-    function dragged(d) {
-      d.fx = d3.event.x;
-      d.fy = d3.event.y;
-    }
-
-    function dragended(d) {
-      if (!d3.event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
-    }
-
-    simulation.on("tick", ticked);
-  </script>
+      simulation.on("tick", ticked);
+    </script>
+  </svg>
 </body>
 </html>
